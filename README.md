@@ -1,12 +1,78 @@
-# ChatGPT Model Implementation
+# GPT Model Implementation & Mobile GUI Agent Framework
+
+This repository contains two projects:
+
+1. **GPT Model Implementation**: A PyTorch implementation of a GPT-style language model
+2. **Mobile GUI Agent Framework**: A framework for mobile GUI automation using reasoning-enabled VLMs
+
+---
+
+## 1. Mobile GUI Agent Framework
+
+A mobile GUI agent framework that uses reasoning-enabled Vision-Language Models (VLMs) for automated smartphone control, based on the paper "Does Chain-of-Thought Reasoning Help Mobile GUI Agent? An Empirical Study".
+
+### Features
+
+- Support for reasoning-enabled VLMs (Claude 3.7 Sonnet, Gemini 2.0 Flash, GPT-4)
+- Multiple prompting strategies (Set-of-Mark, Accessibility Tree)
+- GUI element grounding with coordinate prediction
+- Action execution for mobile automation
+- Chain-of-thought reasoning for complex tasks
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+### Usage
+
+```python
+from mobile_gui_agent import MobileGUIAgent
+from mobile_gui_agent.vlm import ClaudeVLM
+
+# Initialize agent with reasoning-enabled VLM
+agent = MobileGUIAgent(
+    vlm=ClaudeVLM(model="claude-3-7-sonnet", use_reasoning=True),
+    prompting_strategy="set_of_mark"
+)
+
+# Execute a task
+result = agent.execute_task(
+    screenshot_path="screenshot.png",
+    task_instruction="Set my DM Spam filter to 'Do not filter direct messages' on Discord app"
+)
+
+print(f"Action: {result['action']}")
+print(f"Reasoning: {result['reasoning']}")
+```
+
+### Architecture
+
+- `mobile_gui_agent/`: Core framework
+  - `agent.py`: Main agent implementation
+  - `vlm/`: VLM provider implementations
+  - `grounding.py`: GUI element grounding
+  - `actions.py`: Action execution
+  - `prompting.py`: Prompting strategies
+
+### Supported VLMs
+
+- Claude 3.7 Sonnet (with/without reasoning)
+- Gemini 2.0 Flash (with/without reasoning)
+- GPT-4o
+
+---
+
+## 2. GPT Model Implementation
 
 A PyTorch implementation of a GPT-style language model with transformer architecture. This implementation includes multi-head attention, transformer blocks, positional encodings, and text generation capabilities.
 
-## Architecture Overview
+### Architecture Overview
 
 This implementation follows the GPT (Generative Pre-trained Transformer) architecture with the following key components:
 
-### Multi-Head Attention
+#### Multi-Head Attention
 The attention mechanism allows the model to focus on different parts of the input sequence when making predictions. The scaled dot-product attention is computed as:
 
 ```
@@ -15,7 +81,7 @@ Attention(Q, K, V) = softmax(QK^T / √d_k)V
 
 Multi-head attention runs multiple attention operations in parallel and concatenates their outputs, allowing the model to attend to information from different representation subspaces.
 
-### Transformer Block
+#### Transformer Block
 Each transformer block consists of:
 - Multi-head self-attention layer with residual connection
 - Layer normalization
@@ -23,7 +89,7 @@ Each transformer block consists of:
 - Layer normalization
 - Dropout for regularization
 
-### Positional Encoding
+#### Positional Encoding
 Since transformers don't have inherent notion of sequence order, positional encodings are added to the input embeddings using sine and cosine functions:
 
 ```
@@ -31,15 +97,7 @@ PE(pos, 2i) = sin(pos / 10000^(2i/d_model))
 PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
 ```
 
-### GPT Model Architecture
-The complete model consists of:
-- Token embeddings
-- Positional encodings
-- Stack of N transformer blocks
-- Layer normalization
-- Output projection to vocabulary size
-
-## Files
+### Files
 
 - `attention.py`: Multi-head attention mechanism implementation
 - `transformer_block.py`: Transformer block with feed-forward network
@@ -48,7 +106,7 @@ The complete model consists of:
 - `tokenizer.py`: Simple tokenizer for text processing
 - `example.py`: Example usage for training and inference
 
-## Model Configuration
+### Model Configuration
 
 Default model parameters:
 - `d_model`: 768 (embedding dimension)
@@ -57,8 +115,6 @@ Default model parameters:
 - `d_ff`: 3072 (feed-forward network dimension)
 - `max_seq_length`: 1024 (maximum sequence length)
 - `dropout`: 0.1
-
-## Usage
 
 ### Training a Model
 
@@ -121,80 +177,6 @@ generated_text = tokenizer.decode(generated[0].tolist())
 print(generated_text)
 ```
 
-## Text Generation Strategies
+## License
 
-The model supports several sampling strategies:
-
-1. **Temperature Sampling**: Controls randomness of predictions (lower = more deterministic, higher = more random)
-
-2. **Top-k Sampling**: Only samples from the k most likely tokens
-
-3. **Top-p (Nucleus) Sampling**: Samples from the smallest set of tokens whose cumulative probability exceeds p
-
-## Training Features
-
-- **AdamW Optimizer**: With configurable learning rate and weight decay
-- **Learning Rate Warmup**: Gradual learning rate increase at the start
-- **Cosine Annealing Schedule**: Smooth learning rate decay
-- **Gradient Clipping**: Prevents exploding gradients
-- **Validation**: Optional validation set for monitoring overfitting
-- **Checkpointing**: Save and load model states
-
-## Requirements
-
-```
-torch>=2.0.0
-tqdm
-```
-
-## Running the Example
-
-```bash
-python example.py
-```
-
-This will:
-1. Build a vocabulary from sample text
-2. Create and train a small GPT model
-3. Generate text from prompts
-4. Save a model checkpoint
-
-## Model Size
-
-The parameter count for the default configuration (GPT-2 small equivalent):
-- Embedding parameters: vocab_size × d_model
-- Transformer parameters: ~85M (for 12 layers, 768 dim, 12 heads)
-- Total: ~117M parameters (with 50k vocab)
-
-## Notes
-
-- This is an educational implementation focusing on clarity and understanding
-- For production use, consider using more sophisticated tokenizers (BPE, SentencePiece)
-- Training large models requires significant computational resources (GPU recommended)
-- The simple tokenizer is basic; real applications should use subword tokenization
-- Causal masking ensures autoregressive generation (each position can only attend to previous positions)
-
-## Key Concepts
-
-### Autoregressive Generation
-The model generates text one token at a time, using previously generated tokens as context for predicting the next token.
-
-### Causal Masking
-A triangular mask prevents the model from "seeing" future tokens during training, ensuring it learns to predict based only on past context.
-
-### Layer Normalization
-Normalizes activations across features, stabilizing training and improving convergence.
-
-### Residual Connections
-Skip connections that add the input of a layer to its output, enabling training of very deep networks.
-
-## Future Enhancements
-
-Potential improvements for this implementation:
-- Implement more advanced tokenizers (BPE, WordPiece)
-- Add support for distributed training
-- Implement gradient checkpointing for memory efficiency
-- Add beam search for generation
-- Implement different attention variants (flash attention, sparse attention)
-- Add support for fine-tuning on specific tasks
-- Implement model parallelism for larger models
+MIT
